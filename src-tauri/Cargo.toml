@@ -1,0 +1,48 @@
+[package]
+name = "lcd-remote-controller"
+version = "0.1.0"
+description = "Modern cross-platform dashboard to remote-control BSD-E6 series LCD displays."
+authors = ["BPLRT"]
+edition = "2021"
+license = "MIT"
+
+[lib]
+name = "lcd_remote_controller_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+
+# Async / runtime
+tokio = { version = "1", features = ["full"] }
+
+# HTTP server
+axum = { version = "0.7", features = ["macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "fs", "trace"] }
+
+# Serial port
+serialport = "4.5"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Misc
+anyhow = "1"
+thiserror = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+directories = "5"
+hostname = "0.4"
+local-ip-address = "0.6"
+mime_guess = "2"
+once_cell = "1"
+rust-embed = { version = "8", features = ["compression"] }
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

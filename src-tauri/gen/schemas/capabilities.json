@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Default capability for the desktop window. The application performs all communication via the embedded HTTP server, so no additional Tauri permissions are required beyond the core window/event APIs.","local":true,"windows":["main"],"permissions":["core:default"]}}
