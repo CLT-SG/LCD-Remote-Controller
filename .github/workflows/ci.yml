@@ -33,6 +33,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+
+      # The Rust binary embeds the compiled Vue bundle via
+      # `#[derive(RustEmbed)] #[folder = "../dist/"]`, so we must produce
+      # `dist/` before any cargo step touches the http_server module.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build frontend bundle (required for rust-embed)
+        run: npm run build
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -49,6 +61,8 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             libssl-dev \
+            libudev-dev \
+            pkg-config \
             build-essential
 
       - name: cargo fmt --check

@@ -4,7 +4,10 @@
 //! configured port name so the rest of the application can still be inspected
 //! and configured before any hardware is connected.
 
-use std::{io::{Read, Write}, time::Duration};
+use std::{
+    io::{Read, Write},
+    time::Duration,
+};
 
 use anyhow::{Context, Result};
 use serialport::SerialPort;
@@ -22,6 +25,10 @@ impl SerialManager {
         Self { config, port: None }
     }
 
+    /// Read-only view of the active serial configuration. Currently used
+    /// only by tests and integration probes; kept on the public API so
+    /// callers do not have to clone the config to inspect it.
+    #[allow(dead_code)]
     pub fn config(&self) -> &ComConfig {
         &self.config
     }
