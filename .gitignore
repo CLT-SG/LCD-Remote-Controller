@@ -6,11 +6,13 @@ dist-ssr
 
 # Rust / Tauri
 src-tauri/target
-src-tauri/Cargo.lock
-package-lock.json
+# Cargo.lock and package-lock.json are intentionally tracked: this is a
+# binary application, so reproducible builds (and `npm ci` in CI) need
+# the locked dependency graph.
 
 # Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
-.github
+.github/PR-DESCRIPTION.md
+.github/ai-message.txt
