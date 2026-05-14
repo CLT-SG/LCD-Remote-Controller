@@ -1,6 +1,6 @@
 # LCD Remote Controller
 
-Modern, cross-platform dashboard for remote-controlling **BSD-E6 series LCD
+Modern, cross-platform dashboard for remote-controlling **BPLRT-BSD-E6 series LCD
 displays** over RS-232. The desktop application also exposes the same UI
 to phones on the same Wi-Fi network through an embedded HTTP server, so
 operators can use whichever device is closer at hand.

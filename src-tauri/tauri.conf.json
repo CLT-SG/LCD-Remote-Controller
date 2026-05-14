@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "LCD Remote Controller",
-        "width": 1100,
-        "height": 760,
+        "width": 1350,
+        "height": 900,
         "minWidth": 720,
         "minHeight": 560,
         "resizable": true,
@@ -38,6 +38,6 @@
     ],
     "category": "Utility",
     "shortDescription": "Remote-control BSD-E6 LCD displays.",
-    "longDescription": "Cross-platform dashboard for remote-controlling BSD-E6 series LCD displays via RS-232. Includes an embedded HTTP server so phones on the same network can control the display through a browser."
+    "longDescription": "Cross-platform dashboard for remote-controlling BPLRT-BSD-E6 series LCD displays via RS-232. Includes an embedded HTTP server so phones on the same network can control the display through a browser."
   }
 }

@@ -7,3 +7,4 @@
 | [API.md](./API.md)                   | REST/JSON API exposed by the embedded HTTP server. |
 | [DEVELOPMENT.md](./DEVELOPMENT.md)   | Setup, build, test instructions for contributors. |
 | [USAGE.md](./USAGE.md)               | End-user guide for operators on site. |
+| [UI.md](./UI.md)                     | Dashboard layout, theming and components. |

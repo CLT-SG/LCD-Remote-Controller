@@ -4,7 +4,48 @@ All notable changes to this project are documented in this file. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## v1.0.5 (14 May 2026)
+
+### Added
+
+- **CLT brand mark** in the dashboard header. The component
+  (`src/components/CltLogo.vue`) renders the canonical application
+  icon (`src-tauri/icons/512x512.png`, mirrored at
+  `src/assets/logo.png` for Vite bundling).
+- **Light / dark theme toggle** placed beside the refresh button.
+  Implemented in `src/composables/useTheme.ts`; the selection is
+  persisted in `localStorage` under `clt.theme` and falls back to the
+  OS-level `prefers-color-scheme` preference on first run.
+- **Mobile Access** promoted to its own dashboard card, rendered
+  directly below the Contrast container so operators can see the LAN
+  URLs without opening the COM settings panel.
+- `docs/UI.md` describing the dashboard layout, theming model and
+  component responsibilities; linked from `docs/README.md`.
+- `*.png` and `*.svg` module declarations in `src/shims-vue.d.ts` so
+  TypeScript accepts asset imports.
+- Light-theme overrides scoped under `html.light` in `src/style.css`,
+  including a tuned scrollbar and a smooth background transition.
+
+### Changed
+
+- Renamed the application from "BSD-E6 LCD Remote Controller" to
+  **"CLT LCD Remote Controller"** in the dashboard header and footer.
+- Reorganised the dashboard grid:
+  - **Power**, **Input Source** and **Volume** now share one row
+    (`md:grid-cols-3`).
+  - **Brightness** and **Contrast** share a second row
+    (`md:grid-cols-2`).
+  - **Mobile Access** occupies a full-width row underneath.
+- Updated the hardware reference from `BSD-E6` to **`BPLRT-BSD-E6`**
+  in `README.md`, `package.json`, `src-tauri/Cargo.toml`,
+  `src-tauri/tauri.conf.json` (`longDescription`) and the module-level
+  doc comment of `src-tauri/src/protocol.rs`.
+- Bumped the application version to **`1.0.5`** in `package.json` and
+  `src-tauri/Cargo.toml`.
+- Increased the default Tauri window size from `1100x760` to
+  **`1350x900`** to comfortably fit the new three-column primary row.
+
+## v0.1.0
 
 ### Added
 
