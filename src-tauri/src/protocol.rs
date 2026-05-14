@@ -1,4 +1,4 @@
-//! BSD-E6 series RS-232 protocol.
+//! BPLRT-BSD-E6 series RS-232 protocol.
 //!
 //! All commands have the form:
 //!

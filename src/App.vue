@@ -6,8 +6,8 @@ import {
   Volume2,
   VolumeX,
   Sun,
+  Moon,
   Contrast,
-  Power,
   Plug,
   RefreshCw,
   Smartphone,
@@ -20,12 +20,15 @@ import FluentSlider from "./components/FluentSlider.vue";
 import PowerToggle from "./components/PowerToggle.vue";
 import InputSourceSelect from "./components/InputSourceSelect.vue";
 import ComConfigPanel from "./components/ComConfigPanel.vue";
+import CltLogo from "./components/CltLogo.vue";
+import { useTheme } from "./composables/useTheme";
 
 const status = ref<DeviceStatus | null>(null);
 const com = ref<ComInfo | null>(null);
 const info = ref<ServerInfo | null>(null);
 const errorMessage = ref<string | null>(null);
 const showSettings = ref(false);
+const { theme, toggle: toggleTheme } = useTheme();
 let pollHandle: number | undefined;
 
 async function loadStatus() {
@@ -85,15 +88,13 @@ onUnmounted(() => {
       class="sticky top-0 z-20 backdrop-blur bg-black/30 border-b border-white/5"
     >
       <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-accent/20 grid place-items-center">
-          <Power class="w-4 h-4 text-accent" />
-        </div>
+        <CltLogo :size="36" class="shrink-0" />
         <div class="flex-1 min-w-0">
           <h1 class="text-base sm:text-lg font-semibold leading-tight truncate">
-            LCD Remote Controller
+            CLT LCD Remote Controller
           </h1>
           <p class="text-xs text-white/50 truncate">
-            BSD-E6 series · RS-232
+            BPLRT-BSD-E6 series · RS-232
             <span v-if="status">
               ·
               <span :class="status.connected ? 'text-emerald-400' : 'text-red-400'">
@@ -115,8 +116,19 @@ onUnmounted(() => {
           class="px-2.5 py-1.5 rounded-fluent text-sm bg-white/5 hover:bg-white/10 border border-white/10"
           @click="loadStatus"
           title="Refresh status"
+          aria-label="Refresh status"
         >
           <RefreshCw class="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          class="px-2.5 py-1.5 rounded-fluent text-sm bg-white/5 hover:bg-white/10 border border-white/10"
+          @click="toggleTheme"
+          :title="theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+          :aria-label="theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+        >
+          <Sun v-if="theme === 'dark'" class="w-4 h-4" />
+          <Moon v-else class="w-4 h-4" />
         </button>
       </div>
     </header>
@@ -135,27 +147,12 @@ onUnmounted(() => {
           subtitle="Configure the RS-232 link to the display."
         >
           <ComConfigPanel :info="com" @saved="(v: ComInfo) => (com = v)" />
-          <div
-            v-if="info"
-            class="mt-4 pt-4 border-t border-white/10 text-xs text-white/60 flex items-start gap-2"
-          >
-            <Smartphone class="w-4 h-4 mt-0.5" />
-            <div>
-              <div class="font-medium text-white/80 mb-1">Mobile Access</div>
-              <div>
-                On a phone connected to the same network, open one of:
-              </div>
-              <ul class="mt-1 space-y-0.5">
-                <li v-for="addr in info.addresses" :key="addr">
-                  <code class="text-accent">http://{{ addr }}:{{ info.port }}</code>
-                </li>
-              </ul>
-            </div>
-          </div>
         </DashboardCard>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Row 1: Power, Input Source and Volume share a single row on
+           medium screens and up. -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <DashboardCard title="Power" subtitle="Turn the display on or off.">
           <PowerToggle
             :model-value="status?.power ?? false"
@@ -194,7 +191,10 @@ onUnmounted(() => {
             </div>
           </div>
         </DashboardCard>
+      </div>
 
+      <!-- Row 2: Brightness and Contrast side-by-side. -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <DashboardCard title="Brightness" subtitle="0–100">
           <FluentSlider
             :model-value="status?.brightness ?? 0"
@@ -206,7 +206,7 @@ onUnmounted(() => {
           />
         </DashboardCard>
 
-        <DashboardCard title="Contrast" subtitle="0–100" class="lg:col-span-2">
+        <DashboardCard title="Contrast" subtitle="0–100">
           <FluentSlider
             :model-value="status?.contrast ?? 0"
             :icon="Contrast"
@@ -218,8 +218,33 @@ onUnmounted(() => {
         </DashboardCard>
       </div>
 
+      <!-- Mobile Access lives below the Contrast container so operators
+           can quickly find the URL to open on their phone. -->
+      <DashboardCard
+        v-if="info"
+        title="Mobile Access"
+        subtitle="Open the dashboard on a phone connected to the same network."
+      >
+        <div class="flex items-start gap-3 text-sm text-white/80">
+          <Smartphone class="w-5 h-5 mt-0.5 text-accent" />
+          <div class="flex-1">
+            <p class="text-white/70 mb-2">
+              Point any browser on the same Wi-Fi network at one of the
+              addresses below:
+            </p>
+            <ul class="space-y-1">
+              <li v-for="addr in info.addresses" :key="addr">
+                <code
+                  class="text-accent bg-white/5 border border-white/10 rounded px-2 py-1 inline-block"
+                >http://{{ addr }}:{{ info.port }}</code>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </DashboardCard>
+
       <footer class="text-center text-xs text-white/40 pt-4">
-        v{{ info?.version ?? "0.1.0" }} · BSD-E6 LCD Remote Controller
+        v{{ info?.version ?? "0.1.0" }} · CLT LCD Remote Controller
       </footer>
     </main>
   </div>
