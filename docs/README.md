@@ -8,3 +8,4 @@
 | [DEVELOPMENT.md](./DEVELOPMENT.md)   | Setup, build, test instructions for contributors. |
 | [USAGE.md](./USAGE.md)               | End-user guide for operators on site. |
 | [UI.md](./UI.md)                     | Dashboard layout, theming and components. |
+| [RELEASE.md](./RELEASE.md)           | Release process and CI / GitHub Actions overview. |
