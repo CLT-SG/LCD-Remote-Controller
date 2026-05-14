@@ -84,16 +84,28 @@ pub fn build_frame(op: Op, param: u8) -> [u8; 8] {
 /// surface validation errors.
 pub mod cmd {
     use super::*;
-    pub fn get(op: Op) -> [u8; 8] { build_frame(op, 0x01) }
-    pub fn set_bool(op: Op, on: bool) -> [u8; 8] { build_frame(op, if on { 1 } else { 0 }) }
-    pub fn set_percent(op: Op, value: u8) -> [u8; 8] { build_frame(op, value) }
-    pub fn set_input(src: InputSource) -> [u8; 8] { build_frame(Op::SetInput, src as u8) }
+    pub fn get(op: Op) -> [u8; 8] {
+        build_frame(op, 0x01)
+    }
+    pub fn set_bool(op: Op, on: bool) -> [u8; 8] {
+        build_frame(op, if on { 1 } else { 0 })
+    }
+    pub fn set_percent(op: Op, value: u8) -> [u8; 8] {
+        build_frame(op, value)
+    }
+    pub fn set_input(src: InputSource) -> [u8; 8] {
+        build_frame(Op::SetInput, src as u8)
+    }
 }
 
 /// Parse a single response byte into a percentage value (0..=100), or `None`
 /// when the device returned the failure sentinel `0xFF`.
 pub fn parse_percent(byte: u8) -> Option<u8> {
-    if byte == 0xFF || byte > 100 { None } else { Some(byte) }
+    if byte == 0xFF || byte > 100 {
+        None
+    } else {
+        Some(byte)
+    }
 }
 
 /// Parse a single response byte into a boolean (0 / 1), or `None` on failure.

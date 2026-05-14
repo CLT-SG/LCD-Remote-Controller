@@ -75,7 +75,9 @@ async fn refresh_and_return(state: AppState) -> Json<DeviceSnapshot> {
 
 // ---------------- Handlers ----------------
 
-async fn health() -> &'static str { "ok" }
+async fn health() -> &'static str {
+    "ok"
+}
 
 #[derive(Serialize)]
 struct ServerInfo {
@@ -112,7 +114,9 @@ async fn status(State(state): State<AppState>) -> Json<DeviceSnapshot> {
 }
 
 #[derive(Deserialize)]
-struct PowerReq { on: bool }
+struct PowerReq {
+    on: bool,
+}
 
 async fn set_power(State(state): State<AppState>, Json(req): Json<PowerReq>) -> Response {
     let mut inner = state.lock().await;
@@ -124,7 +128,9 @@ async fn set_power(State(state): State<AppState>, Json(req): Json<PowerReq>) -> 
 }
 
 #[derive(Deserialize)]
-struct PercentReq { value: u8 }
+struct PercentReq {
+    value: u8,
+}
 
 async fn set_volume(State(state): State<AppState>, Json(req): Json<PercentReq>) -> Response {
     set_percent(state, req.value, |s, v| s.set_volume(v)).await
@@ -152,7 +158,9 @@ where
 }
 
 #[derive(Deserialize)]
-struct MuteReq { muted: bool }
+struct MuteReq {
+    muted: bool,
+}
 
 async fn set_mute(State(state): State<AppState>, Json(req): Json<MuteReq>) -> Response {
     let mut inner = state.lock().await;
@@ -164,7 +172,9 @@ async fn set_mute(State(state): State<AppState>, Json(req): Json<MuteReq>) -> Re
 }
 
 #[derive(Deserialize)]
-struct InputReq { source: InputSource }
+struct InputReq {
+    source: InputSource,
+}
 
 async fn set_input(State(state): State<AppState>, Json(req): Json<InputReq>) -> Response {
     let mut inner = state.lock().await;
@@ -189,10 +199,7 @@ async fn get_com(State(state): State<AppState>) -> Json<ComInfoResponse> {
     })
 }
 
-async fn set_com(
-    State(state): State<AppState>,
-    Json(cfg): Json<ComConfig>,
-) -> Response {
+async fn set_com(State(state): State<AppState>, Json(cfg): Json<ComConfig>) -> Response {
     let mut inner = state.lock().await;
     inner.config.com = cfg.clone();
     inner.serial.update_config(cfg);
@@ -218,8 +225,14 @@ async fn test_com(State(state): State<AppState>) -> Json<TestResponse> {
     inner.serial.close();
     let res = inner.serial.open();
     match res {
-        Ok(()) => Json(TestResponse { ok: true, error: None }),
-        Err(e) => Json(TestResponse { ok: false, error: Some(format!("{e:#}")) }),
+        Ok(()) => Json(TestResponse {
+            ok: true,
+            error: None,
+        }),
+        Err(e) => Json(TestResponse {
+            ok: false,
+            error: Some(format!("{e:#}")),
+        }),
     }
 }
 
@@ -243,6 +256,9 @@ async fn static_handler(uri: Uri) -> Response {
         )
             .into_response();
     }
-    (StatusCode::NOT_FOUND, "frontend bundle missing — run `npm run build` before `cargo build`").into_response()
+    (
+        StatusCode::NOT_FOUND,
+        "frontend bundle missing — run `npm run build` before `cargo build`",
+    )
+        .into_response()
 }
-
