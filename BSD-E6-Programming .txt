@@ -1,0 +1,68 @@
+Communication method: RS-232
+COM Port：COMX 
+Baud rate：115 200 bps
+Data bit format: 1 start bit, 8 data bits, no parity bit, 1 stop bit
+
+
+Function			Command				Return Value
+30: Get Power status status	B2 00 00 3A 01 01 30 0A		0 (Off), 1 (On), 255 (Failure)
+31: Get Brightness status	B2 00 00 3A 01 01 31 0B		0..100 or 255 (Failure)
+32: Get Contrast status		B2 00 00 3A 01 01 32 08		0..100 or 255 (Failure)
+33: Get Volume status		B2 00 00 3A 01 01 33 09		0..100 or 255 (Failure)
+34: Get Mute status		B2 00 00 3A 01 01 34 0E		0 (Not Muted), 1 (Muted), 255 (Failure)
+35: Get Input status		B2 00 00 3A 01 01 35 0F		0: VGA, 1: HDMI, 2: DP (etc.), 255 (Failure)
+xx: Get <something> status	B2 00 00 3A 01 01 xx ss		<something> or 255 (Failure)
+40: Set Power			B2 00 00 3A 01 40 01 7A		0 (Off), 1 (On)
+40: Set Power			B2 00 00 3A 01 40 00 7B		0 (Off), 1 (On)
+42: Set Contrast		B2 00 00 3A 01 42 64 1D		0..100
+41: Set Brightness		B2 00 00 3A 01 41 05 7F		Brightness 5&
+41: Set Brightness		B2 00 00 3A 01 41 32 48		Brightness 50%
+41: Set Brightness		B2 00 00 3A 01 41 64 1E		Brightness 100%
+43: Set Volume			B2 00 00 3A 01 43 05 7D		Vol 5
+43: Set Volume			B2 00 00 3A 01 43 28 50		Vol 40
+43: Set Volume			B2 00 00 3A 01 43 32 4A		Vol 50
+43: Set Volume			B2 00 00 3A 01 43 64 1C		Vol 100
+44: Set Mute			B2 00 00 3A 01 44 00 7F		0 (Not Muted), 1 (Muted)
+44: Set Mute			B2 00 00 3A 01 44 01 7E		0 (Not Muted), 1 (Muted)
+45: Set Input			B2 00 00 3A 01 45 00 7E		0: VGA, 1: HDMI, 2: DP, etc.
+45: Set Input			B2 00 00 3A 01 45 01 7F		0: VGA, 1: HDMI, 2: DP, etc.
+45: Set Input			B2 00 00 3A 01 45 02 7C		0: VGA, 1: HDMI, 2: DP, etc.
+45: Set Input			B2 00 00 3A 01 45 03 7D		0: VGA, 1: HDMI, 2: DP, etc.
+45: Set Input			B2 00 00 3A 01 45 04 7A		0: VGA, 1: HDMI, 2: DP, etc.
+xx: Set <something>		B2 00 00 3A 01 xx nn ss		0 (Normal) or 255 (Failure)
+		
+Notes:		
+All out-of-range or invalid parameters will result in a return code of 255 (Failure).		
+nn = Function parameter.		
+ss = Checksum, not calculated in this example table.		
+xx = Examples of additional values that can be added (e.g., temperature, PSU status, fan status, etc.).		
+
+Example: Setting Brightness to 100
+To set brightness to 100, use the following command:
+B2 00 00 3A 01 41 64 1E
+The last hex value (1E in this case) must be calculated using an XOR operation.
+
+How to Calculate the Last Hex (Checksum)
+The XOR calculation starts from 0x3A and includes all values up to the brightness value.
+_____________________________________________________________________________________
+Method 1: Using Windows Calculator
+1. Open the Windows Calculator.
+2. Switch to Programmer Mode (Alt + 3).
+3. Set the calculator to Hex mode.
+4. Perform the XOR operation in the following order:
+3A XOR 01 XOR 41 XOR (Brightness value)
+5. The result will be the final checksum value.
+_____________________________________________________________________________________
+Method 2: Using an Online XOR Calculator
+1. Open the XOR calculator: https://toolslick.com/math/bitwise/xor-calculator
+2. Insert the hex values in this format:
+3A 01 41 (Brightness value)
+3. Click Calculate and copy the hex result at the bottom.
+4. Use the result as the last hex in your command.
+
+For Brightness = 100 (0x64), the XOR calculation would be:
+3A 01 41 64 XOR ? 1E
+
+So the complete command is:
+B2 00 00 3A 01 41 64 1E
+

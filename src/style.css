@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   Global Fluent-inspired theme tweaks. The application targets a dark
+   surface by default with a Windows 11 / Mica-style aesthetic.
+   ------------------------------------------------------------------ */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(0, 120, 212, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(120, 60, 200, 0.14), transparent 60%),
+    #1a1a1a;
+}
+
+/* Hide the native range thumb; we render our own Fluent-style thumb. */
+input[type="range"].fluent-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  width: 100%;
+  outline: none;
+}
+input[type="range"].fluent-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 6px solid #0078d4;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+input[type="range"].fluent-range:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+input[type="range"].fluent-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 6px solid #0078d4;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+/* Subtle scrollbar to match Fluent dark surface */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
