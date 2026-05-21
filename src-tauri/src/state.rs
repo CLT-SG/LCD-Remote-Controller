@@ -9,7 +9,7 @@ use tokio::sync::Mutex;
 
 use crate::config::AppConfig;
 use crate::protocol::InputSource;
-use crate::serial_manager::SerialManager;
+use crate::serial_manager::{SerialLogEntry, SerialManager};
 
 #[derive(Debug, Clone, Serialize, Default)]
 pub struct DeviceSnapshot {
@@ -69,5 +69,13 @@ impl Inner {
         self.snapshot.muted = self.serial.get_mute()?;
         self.snapshot.input = self.serial.get_input()?;
         Ok(())
+    }
+
+    pub fn logs(&self) -> Vec<SerialLogEntry> {
+        self.serial.logs()
+    }
+
+    pub fn clear_logs(&mut self) {
+        self.serial.clear_logs();
     }
 }

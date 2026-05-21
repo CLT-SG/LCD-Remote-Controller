@@ -11,28 +11,28 @@ The dashboard is a single-page Vue 3 application rendered by
 `src/App.vue`. From top to bottom it consists of:
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  Header                                                       │
-│  ┌─────┐  CLT LCD Remote Controller                          │
-│  │LOGO │  BPLRT-BSD-E6 series · RS-232 · Connected      [COM][↻][☀]│
-│  └─────┘                                                      │
-├──────────────────────────────────────────────────────────────┤
-│  (optional)  Communication Configuration card                 │
-├──────────────────────────────────────────────────────────────┤
-│  Row 1   ┌─────────┐ ┌──────────────┐ ┌──────────────────┐   │
-│          │  Power  │ │ Input Source │ │     Volume       │   │
-│          └─────────┘ └──────────────┘ └──────────────────┘   │
-│                                                               │
-│  Row 2   ┌────────────────────┐ ┌────────────────────┐       │
-│          │     Brightness     │ │      Contrast      │       │
-│          └────────────────────┘ └────────────────────┘       │
-│                                                               │
-│  Row 3   ┌────────────────────────────────────────────┐      │
-│          │  Mobile Access (URLs for phones on LAN)    │      │
-│          └────────────────────────────────────────────┘      │
-├──────────────────────────────────────────────────────────────┤
-│  Footer:  v0.1.0 · CLT LCD Remote Controller                  │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Header                                                                      │
+│  ┌─────┐  CLT LCD Remote Controller                                         │
+│  │LOGO │  BPLRT-BSD-E6 series · RS-232 · Connected      [COM][↻][☀]         │
+│  └─────┘                                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  (optional)  Communication Configuration card                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌────────────────────────────────────────────┐ ┌──────────────────────────┐  │
+│  │  Row 1   ┌─────────┐ ┌────────┐ ┌───────┐ │ │                          │  │
+│  │          │  Power  │ │ Input  │ │Volume │ │ │  Communication Log       │  │
+│  │          └─────────┘ └────────┘ └───────┘ │ │  (TX / RX traffic)       │  │
+│  │  Row 2   ┌────────────┐ ┌────────────┐   │ │                          │  │
+│  │          │ Brightness │ │  Contrast  │   │ │  [Clear]                 │  │
+│  │          └────────────┘ └────────────┘   │ │  14:32:05 TX  B2 ...     │  │
+│  │  Row 3   ┌────────────────────────────┐   │ │  14:32:05 RX  01         │  │
+│  │          │  Mobile Access             │   │ │                          │  │
+│  │          └────────────────────────────┘   │ │                          │  │
+│  └────────────────────────────────────────────┘ └──────────────────────────┘  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Footer:  v0.1.0 · CLT LCD Remote Controller                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 The grid breakpoints are:
@@ -42,6 +42,10 @@ The grid breakpoints are:
   share a single row from the `md` breakpoint upwards.
 * `md:grid-cols-2` for **Row 2** placing Brightness and Contrast
   side-by-side from the `md` breakpoint upwards.
+* `lg:grid-cols-3` for the primary dashboard wrapper so the control
+  cards occupy the left two columns (`lg:col-span-2`) and the
+  **Communication Log** card occupies the right column
+  (`lg:col-span-1`).
 
 ## Header controls
 
@@ -83,6 +87,7 @@ To add a new colour utility that must respond to the theme:
 | `src/components/InputSourceSelect.vue`     | Source picker (VGA / HDMI / DP / DVI / AV).   |
 | `src/components/FluentSlider.vue`          | Slider with drag-tooltip (volume / bright …). |
 | `src/components/ComConfigPanel.vue`        | Serial-link configuration form.               |
+| `src/components/CommunicationLog.vue`      | Scrollable TX / RX traffic panel.             |
 | `src/composables/useTheme.ts`              | Theme state, persistence and DOM application. |
 
 ## Accessibility

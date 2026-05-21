@@ -75,6 +75,31 @@ Attempts to open the configured port without sending any frame. Returns:
 { "ok": false, "error": "opening /dev/ttyUSB0: Permission denied" }
 ```
 
+## Communication log
+
+### `GET /api/logs`
+Returns the most recent 200 serial traffic entries:
+
+```json
+[
+  {
+    "timestamp": "14:32:05",
+    "direction": "TX",
+    "hex": "B2 00 00 3A 01 01 30 0A",
+    "summary": "Get Power"
+  },
+  {
+    "timestamp": "14:32:05",
+    "direction": "RX",
+    "hex": "01",
+    "summary": "0x01"
+  }
+]
+```
+
+### `DELETE /api/logs`
+Clears the in-memory log buffer. Returns `ok`.
+
 ## Error codes
 
 | Status | Meaning                                          |

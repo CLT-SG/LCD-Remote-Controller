@@ -14,18 +14,26 @@ import {
 } from "lucide-vue-next";
 
 import { api } from "./api";
-import type { ComInfo, DeviceStatus, InputSource, ServerInfo } from "./types";
+import type {
+  ComInfo,
+  DeviceStatus,
+  InputSource,
+  SerialLogEntry,
+  ServerInfo,
+} from "./types";
 import DashboardCard from "./components/DashboardCard.vue";
 import FluentSlider from "./components/FluentSlider.vue";
 import PowerToggle from "./components/PowerToggle.vue";
 import InputSourceSelect from "./components/InputSourceSelect.vue";
 import ComConfigPanel from "./components/ComConfigPanel.vue";
+import CommunicationLog from "./components/CommunicationLog.vue";
 import CltLogo from "./components/CltLogo.vue";
 import { useTheme } from "./composables/useTheme";
 
 const status = ref<DeviceStatus | null>(null);
 const com = ref<ComInfo | null>(null);
 const info = ref<ServerInfo | null>(null);
+const logs = ref<SerialLogEntry[]>([]);
 const errorMessage = ref<string | null>(null);
 const showSettings = ref(false);
 const { theme, toggle: toggleTheme } = useTheme();
@@ -37,6 +45,14 @@ async function loadStatus() {
     errorMessage.value = status.value.last_error ?? null;
   } catch (e) {
     errorMessage.value = (e as Error).message;
+  }
+}
+
+async function loadLogs() {
+  try {
+    logs.value = await api.logs();
+  } catch {
+    /* non-fatal */
   }
 }
 
@@ -56,11 +72,25 @@ async function loadInfo() {
   }
 }
 
+async function refreshAll() {
+  await Promise.all([loadStatus(), loadLogs()]);
+}
+
 async function withCall(fn: () => Promise<DeviceStatus>) {
   try {
     const r = await fn();
     status.value = r;
     errorMessage.value = r.last_error ?? null;
+    await loadLogs();
+  } catch (e) {
+    errorMessage.value = (e as Error).message;
+  }
+}
+
+async function onClearLogs() {
+  try {
+    await api.clearLogs();
+    logs.value = [];
   } catch (e) {
     errorMessage.value = (e as Error).message;
   }
@@ -74,8 +104,8 @@ const onMute = (m: boolean) => withCall(() => api.setMute(m));
 const onInput = (s: InputSource) => withCall(() => api.setInput(s));
 
 onMounted(async () => {
-  await Promise.all([loadStatus(), loadCom(), loadInfo()]);
-  pollHandle = window.setInterval(loadStatus, 5000);
+  await Promise.all([loadStatus(), loadCom(), loadInfo(), loadLogs()]);
+  pollHandle = window.setInterval(refreshAll, 5000);
 });
 onUnmounted(() => {
   if (pollHandle) clearInterval(pollHandle);
@@ -133,15 +163,15 @@ onUnmounted(() => {
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-4">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
       <div
         v-if="errorMessage"
-        class="rounded-fluent bg-red-500/10 border border-red-500/30 text-red-200 px-4 py-2 text-sm"
+        class="rounded-fluent bg-red-500/10 border border-red-500/30 text-red-200 px-4 py-2 text-sm mb-4"
       >
         {{ errorMessage }}
       </div>
 
-      <div v-if="showSettings">
+      <div v-if="showSettings" class="mb-4">
         <DashboardCard
           title="Communication Configuration"
           subtitle="Configure the RS-232 link to the display."
@@ -150,98 +180,113 @@ onUnmounted(() => {
         </DashboardCard>
       </div>
 
-      <!-- Row 1: Power, Input Source and Volume share a single row on
-           medium screens and up. -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <DashboardCard title="Power" subtitle="Turn the display on or off.">
-          <PowerToggle
-            :model-value="status?.power ?? false"
-            :disabled="!status?.connected"
-            description="Sends command 0x40 to the display."
-            @change="onPower"
-          />
-        </DashboardCard>
-
-        <DashboardCard title="Input Source" subtitle="Switch the active video input.">
-          <InputSourceSelect
-            :model-value="status?.input ?? null"
-            :disabled="!status?.connected"
-            @change="onInput"
-          />
-        </DashboardCard>
-
-        <DashboardCard title="Volume" subtitle="0–100, with mute toggle.">
-          <div class="space-y-4">
-            <FluentSlider
-              :model-value="status?.volume ?? 0"
-              :icon="status?.muted ? VolumeX : Volume2"
-              label="Volume"
-              unit="%"
-              :disabled="!status?.connected || (status?.muted ?? false)"
-              @change="onVolume"
-            />
-            <div class="flex items-center justify-between text-sm pt-2 border-t border-white/5">
-              <span class="text-white/70">Mute</span>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Left column: controls -->
+        <div class="lg:col-span-2 space-y-4">
+          <!-- Row 1: Power, Input Source and Volume share a single row on
+               medium screens and up. -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <DashboardCard title="Power" subtitle="Turn the display on or off.">
               <PowerToggle
-                :model-value="status?.muted ?? false"
+                :model-value="status?.power ?? false"
                 :disabled="!status?.connected"
-                label=""
-                @change="onMute"
+                description="Sends command 0x40 to the display."
+                @change="onPower"
               />
+            </DashboardCard>
+
+            <DashboardCard title="Input Source" subtitle="Switch the active video input.">
+              <InputSourceSelect
+                :model-value="status?.input ?? null"
+                :disabled="!status?.connected"
+                @change="onInput"
+              />
+            </DashboardCard>
+
+            <DashboardCard title="Volume" subtitle="0–100, with mute toggle.">
+              <div class="space-y-4">
+                <FluentSlider
+                  :model-value="status?.volume ?? 0"
+                  :icon="status?.muted ? VolumeX : Volume2"
+                  label="Volume"
+                  unit="%"
+                  :disabled="!status?.connected || (status?.muted ?? false)"
+                  @change="onVolume"
+                />
+                <div class="flex items-center justify-between text-sm pt-2 border-t border-white/5">
+                  <span class="text-white/70">Mute</span>
+                  <PowerToggle
+                    :model-value="status?.muted ?? false"
+                    :disabled="!status?.connected"
+                    label=""
+                    @change="onMute"
+                  />
+                </div>
+              </div>
+            </DashboardCard>
+          </div>
+
+          <!-- Row 2: Brightness and Contrast side-by-side. -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DashboardCard title="Brightness" subtitle="0–100">
+              <FluentSlider
+                :model-value="status?.brightness ?? 0"
+                :icon="Sun"
+                label="Brightness"
+                unit="%"
+                :disabled="!status?.connected"
+                @change="onBrightness"
+              />
+            </DashboardCard>
+
+            <DashboardCard title="Contrast" subtitle="0–100">
+              <FluentSlider
+                :model-value="status?.contrast ?? 0"
+                :icon="Contrast"
+                label="Contrast"
+                unit="%"
+                :disabled="!status?.connected"
+                @change="onContrast"
+              />
+            </DashboardCard>
+          </div>
+
+          <!-- Mobile Access lives below the Contrast container so operators
+               can quickly find the URL to open on their phone. -->
+          <DashboardCard
+            v-if="info"
+            title="Mobile Access"
+            subtitle="Open the dashboard on a phone connected to the same network."
+          >
+            <div class="flex items-start gap-3 text-sm text-white/80">
+              <Smartphone class="w-5 h-5 mt-0.5 text-accent" />
+              <div class="flex-1">
+                <p class="text-white/70 mb-2">
+                  Point any browser on the same Wi-Fi network at one of the
+                  addresses below:
+                </p>
+                <ul class="space-y-1">
+                  <li v-for="addr in info.addresses" :key="addr">
+                    <code
+                      class="text-accent bg-white/5 border border-white/10 rounded px-2 py-1 inline-block"
+                    >http://{{ addr }}:{{ info.port }}</code>
+                  </li>
+                </ul>
+              </div>
             </div>
-          </div>
-        </DashboardCard>
-      </div>
-
-      <!-- Row 2: Brightness and Contrast side-by-side. -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <DashboardCard title="Brightness" subtitle="0–100">
-          <FluentSlider
-            :model-value="status?.brightness ?? 0"
-            :icon="Sun"
-            label="Brightness"
-            unit="%"
-            :disabled="!status?.connected"
-            @change="onBrightness"
-          />
-        </DashboardCard>
-
-        <DashboardCard title="Contrast" subtitle="0–100">
-          <FluentSlider
-            :model-value="status?.contrast ?? 0"
-            :icon="Contrast"
-            label="Contrast"
-            unit="%"
-            :disabled="!status?.connected"
-            @change="onContrast"
-          />
-        </DashboardCard>
-      </div>
-
-      <!-- Mobile Access lives below the Contrast container so operators
-           can quickly find the URL to open on their phone. -->
-      <DashboardCard
-        v-if="info"
-        title="Mobile Access"
-        subtitle="Open the dashboard on a phone connected to the same network."
-      >
-        <div class="flex items-start gap-3 text-sm text-white/80">
-          <Smartphone class="w-5 h-5 mt-0.5 text-accent" />
-          <div class="flex-1">
-            <p class="text-white/70 mb-2">
-              Point any browser on the same Wi-Fi network at one of the
-              addresses below:
-            </p>
-            <ul class="space-y-1">
-              <li v-for="addr in info.addresses" :key="addr">
-                <code
-                  class="text-accent bg-white/5 border border-white/10 rounded px-2 py-1 inline-block"
-                >http://{{ addr }}:{{ info.port }}</code>
-              </li>
-            </ul>
-          </div>
+          </DashboardCard>
         </div>
-      </DashboardCard>
+
+        <!-- Right column: Communication Log -->
+        <div class="lg:col-span-1">
+          <DashboardCard
+            title="Communication Log"
+            subtitle="RS-232 TX / RX traffic"
+          >
+            <CommunicationLog :logs="logs" @clear="onClearLogs" />
+          </DashboardCard>
+        </div>
+      </div>
 
       <footer class="text-center text-xs text-white/40 pt-4">
         v{{ info?.version ?? "0.1.0" }} · CLT LCD Remote Controller

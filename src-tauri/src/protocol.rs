@@ -26,6 +26,7 @@ const HEADER: [u8; 5] = [0xB2, 0x00, 0x00, 0x3A, 0x01];
 #[derive(Debug, Clone, Copy)]
 #[allow(dead_code)]
 pub enum Op {
+    Get = 0x01,
     GetPower = 0x30,
     GetBrightness = 0x31,
     GetContrast = 0x32,
@@ -85,7 +86,7 @@ pub fn build_frame(op: Op, param: u8) -> [u8; 8] {
 pub mod cmd {
     use super::*;
     pub fn get(op: Op) -> [u8; 8] {
-        build_frame(op, 0x01)
+        build_frame(Op::Get, op as u8)
     }
     pub fn set_bool(op: Op, on: bool) -> [u8; 8] {
         build_frame(op, if on { 1 } else { 0 })
@@ -130,9 +131,8 @@ mod tests {
         // Set Volume = 50       ->  B2 00 00 3A 01 43 32 4A
         assert_eq!(build_frame(Op::SetVolume, 0x32)[7], 0x4A);
         // Get Power status      ->  B2 00 00 3A 01 01 30 0A
-        // (note: spec uses param byte 0x30 with op 0x01)
-        let g = build_frame(Op::GetPower, 0x01);
-        assert_eq!(&g[..6], &[0xB2, 0x00, 0x00, 0x3A, 0x01, 0x30]);
+        let g = cmd::get(Op::GetPower);
+        assert_eq!(&g[..], &[0xB2, 0x00, 0x00, 0x3A, 0x01, 0x01, 0x30, 0x0A]);
     }
 
     #[test]
