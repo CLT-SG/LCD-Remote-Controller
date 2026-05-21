@@ -50,6 +50,13 @@ Using a single API layer keeps the codebase simple and consistent:
 * Shared state is `Arc<tokio::sync::Mutex<Inner>>`. The mutex guards the
   serial port handle and the cached device snapshot. RS-232 is half-duplex,
   so serialising access also avoids interleaved frames on the wire.
+* `SerialManager` further protects the display by enforcing two
+  configurable delays inside every `transact()` call:
+  * **Post-open delay** — pause after opening the COM port before the
+    first command is sent. Some displays need time to initialise the link.
+  * **Inter-command delay** — minimum spacing between consecutive frames.
+    This prevents overwhelming the device when `poll()` sends six getters
+    back-to-back.
 * The Tauri runtime runs on the main thread. The HTTP server is spawned on
   a dedicated worker thread with its own multi-threaded tokio runtime so
   it cannot deadlock UI callbacks.

@@ -1,6 +1,6 @@
 [package]
 name = "lcd-remote-controller"
-version = "1.0.6"
+version = "1.0.7"
 description = "Modern cross-platform dashboard to remote-control BPLRT-BSD-E6 series LCD displays."
 authors = ["BPLRT"]
 edition = "2021"

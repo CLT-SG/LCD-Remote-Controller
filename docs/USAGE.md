@@ -29,6 +29,17 @@ clone). The dashboard opens.
 
 The settings are persisted to disk and reloaded on every launch.
 
+### Timing settings
+
+If the display does not reply reliably (all RX entries show *No response (timeout)*), adjust the two delay fields:
+
+* **Post-Open Delay (ms)** — pause after the COM port is opened before the
+  first command. Default is `200 ms`. Increase to `500–1000 ms` if the display
+  needs more time to initialise the RS-232 link.
+* **Inter-Command Delay (ms)** — minimum gap between consecutive commands.
+  Default is `100 ms`. Increase to `200–300 ms` if the display is overwhelmed
+  by back-to-back traffic during status polling.
+
 ## 4. Control the display
 
 * **Power** — toggle on / off.

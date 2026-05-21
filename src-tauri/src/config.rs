@@ -53,6 +53,10 @@ pub struct ComConfig {
     pub parity: Parity,
     pub flow_control: FlowControl,
     pub timeout_ms: u64,
+    /// Milliseconds to wait after opening the port before the first command.
+    pub post_open_delay_ms: u64,
+    /// Minimum spacing between consecutive commands to avoid overwhelming the display.
+    pub inter_command_delay_ms: u64,
 }
 
 impl Default for ComConfig {
@@ -65,6 +69,8 @@ impl Default for ComConfig {
             parity: Parity::None,
             flow_control: FlowControl::None,
             timeout_ms: 500,
+            post_open_delay_ms: 200,
+            inter_command_delay_ms: 100,
         }
     }
 }

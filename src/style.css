@@ -127,6 +127,22 @@ input[type="range"].fluent-range::-moz-range-thumb {
   cursor: pointer;
 }
 
+/* Fix native select dropdown colours in dark mode (Windows WebView2) ------ */
+select {
+  color-scheme: dark;
+}
+html.light select {
+  color-scheme: light;
+}
+select option {
+  background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.9);
+}
+html.light select option {
+  background-color: #ffffff;
+  color: #111827;
+}
+
 /* Subtle scrollbar to match Fluent dark surface */
 ::-webkit-scrollbar {
   width: 10px;
