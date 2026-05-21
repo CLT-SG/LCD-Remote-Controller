@@ -114,7 +114,9 @@ async fn status(State(state): State<AppState>) -> Json<DeviceSnapshot> {
     refresh_and_return(state).await
 }
 
-async fn get_logs(State(state): State<AppState>) -> Json<Vec<crate::serial_manager::SerialLogEntry>> {
+async fn get_logs(
+    State(state): State<AppState>,
+) -> Json<Vec<crate::serial_manager::SerialLogEntry>> {
     let inner = state.lock().await;
     Json(inner.logs())
 }

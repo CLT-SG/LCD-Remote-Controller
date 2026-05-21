@@ -50,7 +50,11 @@ impl SerialLog {
         self.entries.push_back(SerialLogEntry {
             timestamp,
             direction: direction.to_string(),
-            hex: if hex.is_empty() { "—".to_string() } else { hex },
+            hex: if hex.is_empty() {
+                "—".to_string()
+            } else {
+                hex
+            },
             summary: summary.to_string(),
         });
         while self.entries.len() > self.max_entries {
