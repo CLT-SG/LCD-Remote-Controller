@@ -4,6 +4,44 @@ All notable changes to this project are documented in this file. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.0.6 (21 May 2026)
+
+### Added
+
+- **RS-232 Communication Log** displayed in a dedicated dashboard card on
+  the right-hand column. Every TX and RX frame is timestamped and shown in
+  hex, making it trivial to verify that commands actually reach the display
+  and to inspect replies. The log is a bounded ring buffer (200 entries)
+  stored in `SerialManager`; operators can clear it with the **Clear**
+  button inside the card.
+- `GET /api/logs` and `DELETE /api/logs` endpoints so the Vue frontend can
+  read and clear the serial traffic log.
+- `src/components/CommunicationLog.vue` — scrollable, colour-coded log
+  panel (sky for TX, emerald for RX) with a responsive empty state.
+
+### Fixed
+
+- **GET command frame construction** in `src-tauri/src/protocol.rs`. The
+  BSD-E6 datasheet requires status-read frames to use op-code `0x01` with the
+  function code (`0x30..0x35`) in the parameter byte. Previously the code
+  swapped these two bytes, producing an unrecognised frame (e.g.
+  `B2 00 00 3A 01 30 01 0A` instead of the correct
+  `B2 00 00 3A 01 01 30 0A`). This caused the LCD panel to ignore every
+  status request: the app reported "Connected" because the serial port
+  opened, but every polled value stayed `null`. Hercules and similar
+  terminals worked because they sent the correct byte sequence manually.
+  The fix adds `Op::Get = 0x01` and changes `cmd::get` to
+  `build_frame(Op::Get, op as u8)`, verified against the vendor examples.
+
+### Changed
+
+- Dashboard layout upgraded to `lg:grid-cols-3`. The left two columns
+  (`lg:col-span-2`) contain all existing control cards; the right column
+  (`lg:col-span-1`) hosts the new **Communication Log** card. On smaller
+  screens the log stacks below the controls as before.
+- Polling interval now fetches both device status and logs in parallel
+  (`refreshAll`) so the traffic view stays in sync with the controls.
+
 ## v1.0.5 (14 May 2026)
 
 ### Added

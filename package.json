@@ -1,7 +1,7 @@
 {
   "name": "lcd-remote-controller",
   "private": true,
-  "version": "1.0.5",
+  "version": "1.0.6",
   "type": "module",
   "description": "Modern cross-platform dashboard to remote-control BPLRT-BSD-E6 series LCD displays over RS-232.",
   "scripts": {

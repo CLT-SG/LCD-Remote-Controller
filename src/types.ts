@@ -36,6 +36,13 @@ export interface ServerInfo {
   version: string;
 }
 
+export interface SerialLogEntry {
+  timestamp: string;
+  direction: "TX" | "RX";
+  hex: string;
+  summary: string;
+}
+
 export interface ApiError {
   error: string;
 }

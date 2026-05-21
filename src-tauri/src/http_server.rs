@@ -34,6 +34,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/health", get(health))
         .route("/api/info", get(info))
         .route("/api/status", get(status))
+        .route("/api/logs", get(get_logs).delete(clear_logs))
         .route("/api/power", post(set_power))
         .route("/api/volume", post(set_volume))
         .route("/api/brightness", post(set_brightness))
@@ -111,6 +112,17 @@ async fn info() -> Json<ServerInfo> {
 
 async fn status(State(state): State<AppState>) -> Json<DeviceSnapshot> {
     refresh_and_return(state).await
+}
+
+async fn get_logs(State(state): State<AppState>) -> Json<Vec<crate::serial_manager::SerialLogEntry>> {
+    let inner = state.lock().await;
+    Json(inner.logs())
+}
+
+async fn clear_logs(State(state): State<AppState>) -> &'static str {
+    let mut inner = state.lock().await;
+    inner.clear_logs();
+    "ok"
 }
 
 #[derive(Deserialize)]

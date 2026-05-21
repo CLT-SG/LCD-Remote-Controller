@@ -6,6 +6,7 @@ import type {
   ComInfo,
   DeviceStatus,
   InputSource,
+  SerialLogEntry,
   ServerInfo,
 } from "./types";
 
@@ -64,4 +65,7 @@ export const api = {
   ),
 
   serverInfo: () => request<ServerInfo>("GET", "/api/info"),
+
+  logs: () => request<SerialLogEntry[]>("GET", "/api/logs"),
+  clearLogs: () => request<void>("DELETE", "/api/logs"),
 };
