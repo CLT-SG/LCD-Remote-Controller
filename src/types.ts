@@ -22,6 +22,8 @@ export interface ComConfig {
   parity: "none" | "odd" | "even";
   flow_control: "none" | "software" | "hardware";
   timeout_ms: number;
+  post_open_delay_ms: number;
+  inter_command_delay_ms: number;
 }
 
 export interface ComInfo {
@@ -38,7 +40,7 @@ export interface ServerInfo {
 
 export interface SerialLogEntry {
   timestamp: string;
-  direction: "TX" | "RX";
+  direction: "TX" | "RX" | "ERR";
   hex: string;
   summary: string;
 }

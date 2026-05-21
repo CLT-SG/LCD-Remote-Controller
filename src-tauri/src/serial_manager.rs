@@ -7,7 +7,7 @@
 use std::{
     collections::VecDeque,
     io::{Read, Write},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use anyhow::{Context, Result};
@@ -87,6 +87,8 @@ pub struct SerialManager {
     config: ComConfig,
     port: Option<Box<dyn SerialPort>>,
     log: SerialLog,
+    last_tx: Option<Instant>,
+    last_port_open: Option<Instant>,
 }
 
 impl SerialManager {
@@ -95,6 +97,8 @@ impl SerialManager {
             config,
             port: None,
             log: SerialLog::new(200),
+            last_tx: None,
+            last_port_open: None,
         }
     }
 
@@ -111,6 +115,8 @@ impl SerialManager {
     pub fn update_config(&mut self, config: ComConfig) {
         if config != self.config {
             self.port = None;
+            self.last_tx = None;
+            self.last_port_open = None;
         }
         self.config = config;
     }
@@ -146,11 +152,14 @@ impl SerialManager {
             .open()
             .with_context(|| format!("opening {}", self.config.port))?;
         self.port = Some(port);
+        self.last_port_open = Some(Instant::now());
         Ok(())
     }
 
     pub fn close(&mut self) {
         self.port = None;
+        self.last_tx = None;
+        self.last_port_open = None;
     }
 
     pub fn is_connected(&self) -> bool {
@@ -166,8 +175,30 @@ impl SerialManager {
     }
 
     /// Send a frame and read up to `expect_reply` bytes (typically 1).
+    /// Commands are serialised one-at-a-time with configurable delays so the
+    /// display is never overwhelmed by back-to-back traffic.
     fn transact(&mut self, frame: &[u8], expect_reply: usize, op_name: &str) -> Result<Vec<u8>> {
         self.open()?;
+
+        // --- Post-open delay (only once after a fresh open) ----------------
+        if let Some(opened) = self.last_port_open {
+            let delay = Duration::from_millis(self.config.post_open_delay_ms);
+            let elapsed = opened.elapsed();
+            if elapsed < delay {
+                std::thread::sleep(delay - elapsed);
+            }
+            self.last_port_open = None;
+        }
+
+        // --- Inter-command delay ------------------------------------------
+        if let Some(last_tx) = self.last_tx {
+            let delay = Duration::from_millis(self.config.inter_command_delay_ms);
+            let elapsed = last_tx.elapsed();
+            if elapsed < delay {
+                std::thread::sleep(delay - elapsed);
+            }
+        }
+
         let port = self
             .port
             .as_mut()
@@ -189,20 +220,21 @@ impl SerialManager {
                 Err(e) => {
                     // Drop the handle so the next call retries from scratch.
                     self.port = None;
+                    self.last_tx = Some(Instant::now());
                     self.log
-                        .push("RX", &[], &format!("Error reading reply: {}", e));
+                        .push("ERR", &[], &format!("Error reading reply: {}", e));
                     return Err(anyhow::Error::from(e).context("reading serial reply"));
                 }
             }
         }
         buf.truncate(filled);
+        self.last_tx = Some(Instant::now());
 
-        let rx_summary = if buf.is_empty() {
-            "No response (timeout)".to_string()
+        if buf.is_empty() {
+            self.log.push("ERR", &[], "No response (timeout)");
         } else {
-            describe_reply(&buf)
-        };
-        self.log.push("RX", &buf, &rx_summary);
+            self.log.push("RX", &buf, &describe_reply(&buf));
+        }
 
         Ok(buf)
     }

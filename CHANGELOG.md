@@ -4,6 +4,49 @@ All notable changes to this project are documented in this file. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.0.7 (21 May 2026)
+
+### Added
+
+- **Post-Open Delay** and **Inter-Command Delay** settings in the COM
+  configuration panel. These allow operators to tune the pause after the
+  port is opened and the minimum gap between consecutive RS-232 frames,
+  which is essential for displays that cannot handle rapid back-to-back
+  traffic.
+- `post_open_delay_ms` and `inter_command_delay_ms` fields to
+  `ComConfig` and the persisted `config.json`. Defaults are `200` ms and
+  `100` ms respectively.
+- New `ERR` direction in the communication log for timeouts and serial
+  I/O errors, rendered with a red badge so failures are instantly
+  distinguishable from healthy RX replies.
+- `docs/COMMUNICATION_LOG.md` — a new troubleshooting guide explaining
+  the log format, the three directions (TX / RX / ERR), and step-by-step
+  advice for diagnosing timeout bursts.
+
+### Fixed
+
+- **Serial poll timeouts** caused by `Inner::poll()` sending six getter
+  commands without any spacing. `SerialManager::transact()` now enforces
+  configurable delays after a fresh port open and between consecutive
+  commands, serialising traffic one frame at a time.
+- **Unreadable native select dropdowns on Windows** in dark mode. Added
+  explicit `color-scheme: dark` / `color-scheme: light` to `select`
+  elements and `background-color` / `color` rules for `option` elements
+  in `src/style.css`, forcing WebView2 to respect the application theme
+  regardless of OS defaults.
+
+### Changed
+
+- Timeout and serial read errors are now logged with direction `ERR`
+  instead of `RX`, making the communication log easier to scan for
+  actual failures.
+- Updated `docs/API.md` to document the new `ComConfig` fields and the
+  `ERR` log direction.
+- Updated `docs/ARCHITECTURE.md` concurrency model to describe the
+  serial timing delay mechanism.
+- Updated `docs/USAGE.md` with a "Timing settings" subsection and
+  timeout troubleshooting guidance.
+
 ## v1.0.6 (21 May 2026)
 
 ### Added

@@ -58,7 +58,9 @@ without an additional roundtrip.
     "stop_bits": 1,
     "parity": "none",
     "flow_control": "none",
-    "timeout_ms": 500
+    "timeout_ms": 500,
+    "post_open_delay_ms": 200,
+    "inter_command_delay_ms": 100
   },
   "available_ports": ["/dev/ttyUSB0", "/dev/ttyS0"]
 }
@@ -93,9 +95,20 @@ Returns the most recent 200 serial traffic entries:
     "direction": "RX",
     "hex": "01",
     "summary": "0x01"
+  },
+  {
+    "timestamp": "14:32:06",
+    "direction": "ERR",
+    "hex": "—",
+    "summary": "No response (timeout)"
   }
 ]
 ```
+
+**Directions:**
+- `TX` — command sent to the display.
+- `RX` — reply received from the display.
+- `ERR` — timeout or serial I/O error. These entries help diagnose timing or wiring issues without scrolling through empty RX rows.
 
 ### `DELETE /api/logs`
 Clears the in-memory log buffer. Returns `ok`.

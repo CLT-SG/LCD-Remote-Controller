@@ -23,6 +23,10 @@ const emit = defineEmits<{
           <span class="w-2 h-2 rounded-full bg-emerald-400" />
           RX
         </span>
+        <span class="flex items-center gap-1.5 text-white/60">
+          <span class="w-2 h-2 rounded-full bg-red-400" />
+          ERR
+        </span>
       </div>
       <button
         type="button"
@@ -49,7 +53,9 @@ const emit = defineEmits<{
           :class="
             entry.direction === 'TX'
               ? 'bg-sky-500/20 text-sky-300'
-              : 'bg-emerald-500/20 text-emerald-300'
+              : entry.direction === 'ERR'
+                ? 'bg-red-500/20 text-red-300'
+                : 'bg-emerald-500/20 text-emerald-300'
           "
         >
           {{ entry.direction }}

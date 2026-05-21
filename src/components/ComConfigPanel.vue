@@ -20,6 +20,8 @@ const draft = reactive<ComConfig>({
   parity: "none",
   flow_control: "none",
   timeout_ms: 500,
+  post_open_delay_ms: 200,
+  inter_command_delay_ms: 100,
 });
 
 const saving = ref(false);
@@ -124,9 +126,22 @@ async function test() {
       </select>
     </label>
 
-    <label class="flex flex-col gap-1 text-sm sm:col-span-2">
+    <label class="flex flex-col gap-1 text-sm">
       <span class="text-white/70">Read Timeout (ms)</span>
       <input v-model.number="draft.timeout_ms" type="number" min="50" step="50" class="field" />
+    </label>
+
+    <label class="flex flex-col gap-1 text-sm">
+      <span class="text-white/70">Post-Open Delay (ms)</span>
+      <input v-model.number="draft.post_open_delay_ms" type="number" min="0" step="50" class="field" />
+    </label>
+
+    <label class="flex flex-col gap-1 text-sm sm:col-span-2">
+      <span class="text-white/70">Inter-Command Delay (ms)</span>
+      <input v-model.number="draft.inter_command_delay_ms" type="number" min="0" step="10" class="field" />
+      <p class="text-xs text-white/40">
+        Minimum pause between consecutive commands. Increase this if the display does not respond reliably.
+      </p>
     </label>
 
     <div class="sm:col-span-2 flex flex-wrap gap-2 items-center">
