@@ -43,9 +43,9 @@ This PR resolves a critical protocol bug that prevented the application from rea
 | File | Change |
 |------|--------|
 | `src-tauri/src/protocol.rs` | Added `Op::Get = 0x01`; fixed `cmd::get`; updated unit test. |
-| `src-tauri/src/serial_manager.rs` | Added `SerialLogEntry`, `SerialLog`; instrumented `transact` with TX/RX logging. |
+| `src-tauri/src/serial_manager.rs` | Added `SerialLogEntry`, `SerialLog`; instrumented `transact` with TX/RX logging; applied `cargo fmt` formatting. |
 | `src-tauri/src/state.rs` | Added `logs()` and `clear_logs()` delegation methods. |
-| `src-tauri/src/http_server.rs` | Added `GET /api/logs` and `DELETE /api/logs` handlers. |
+| `src-tauri/src/http_server.rs` | Added `GET /api/logs` and `DELETE /api/logs` handlers; applied `cargo fmt` formatting. |
 | `src/types.ts` | Added `SerialLogEntry` TypeScript interface. |
 | `src/api.ts` | Added `logs()` and `clearLogs()` API client methods. |
 | `src/App.vue` | Integrated `CommunicationLog`; restructured layout; added `loadLogs` / `onClearLogs`. |
@@ -57,6 +57,7 @@ This PR resolves a critical protocol bug that prevented the application from rea
 ## Verification
 
 - `cargo test` in `src-tauri` passes, including the corrected GET checksum test.
+- `cargo fmt --check` and `cargo clippy -- -D warnings` both pass on the Rust backend.
 - `npm run build` in the Vue frontend completes without type or lint errors.
 - The GET Power frame now produces `B2 00 00 3A 01 01 30 0A`, matching the vendor datasheet exactly.
 

@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   screens the log stacks below the controls as before.
 - Polling interval now fetches both device status and logs in parallel
   (`refreshAll`) so the traffic view stays in sync with the controls.
+- Applied `cargo fmt` formatting to `src-tauri/src/http_server.rs` and
+  `src-tauri/src/serial_manager.rs` so the CI lint pipeline passes cleanly.
 
 ## v1.0.5 (14 May 2026)
 
