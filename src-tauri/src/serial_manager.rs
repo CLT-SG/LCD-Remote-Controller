@@ -122,9 +122,13 @@ impl SerialManager {
     }
 
     pub fn list_ports() -> Vec<String> {
-        serialport::available_ports()
+        let mut ports: Vec<String> =serialport::available_ports()
             .map(|ports| ports.into_iter().map(|p| p.port_name).collect())
-            .unwrap_or_default()
+            .unwrap_or_default();
+        
+        ports.push("MOCK".to_string());
+
+        ports
     }
 
     /// Open the configured port, returning an error if it cannot be opened.
@@ -143,6 +147,11 @@ impl SerialManager {
             7 => serialport::DataBits::Seven,
             _ => serialport::DataBits::Eight,
         };
+
+        if self.config.port == "MOCK" {
+            self.last_port_open = Some(Instant::now());
+            return Ok(());
+}
         let port = serialport::new(&self.config.port, self.config.baud_rate)
             .data_bits(data_bits)
             .stop_bits(stop_bits)
@@ -163,7 +172,7 @@ impl SerialManager {
     }
 
     pub fn is_connected(&self) -> bool {
-        self.port.is_some()
+        self.config.port == "MOCK" || self.port.is_some()
     }
 
     pub fn logs(&self) -> Vec<SerialLogEntry> {
@@ -199,14 +208,22 @@ impl SerialManager {
             }
         }
 
+        self.log.push("TX", frame, op_name);
+
+        if self.config.port == "MOCK" {
+            std::thread::sleep(Duration::from_millis(50));
+            self.last_tx = Some(Instant::now());
+            self.log.push("RX", &[0x00], "MOCK response");
+            return Ok(vec![0x00]);
+        }
+
         let port = self
-            .port
-            .as_mut()
-            .expect("port should be open after open()");
+        .port
+        .as_mut()
+        .expect("port should be open after open()");
+
         // Best-effort flush of stale bytes from the receive buffer.
         let _ = port.clear(serialport::ClearBuffer::Input);
-
-        self.log.push("TX", frame, op_name);
 
         port.write_all(frame).context("writing serial frame")?;
         port.flush().context("flushing serial frame")?;
