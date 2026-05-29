@@ -23,14 +23,14 @@ function pick(s: InputSource) {
 </script>
 
 <template>
-  <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+  <div class="flex flex-wrap gap-2">
     <button
       v-for="s in sources"
       :key="s.id"
       type="button"
       @click="pick(s.id)"
       :disabled="disabled"
-      class="px-3 py-2 rounded-fluent text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      class="px-4 py-2 min-w-[72px] rounded-fluent text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       :class="modelValue === s.id
         ? 'bg-accent border-accent text-white'
         : 'bg-white/5 border-surface-stroke text-white/80 hover:bg-white/10'"

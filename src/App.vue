@@ -97,7 +97,12 @@ async function onClearLogs() {
 }
 
 const onPower = (v: boolean) => withCall(() => api.setPower(v));
-const onVolume = (v: number) => withCall(() => api.setVolume(v));
+const onVolume = async (v: number) => {
+  if (status.value?.muted) {
+    await withCall(() => api.setMute(false));
+  }
+  await withCall(() => api.setVolume(v));
+};
 const onBrightness = (v: number) => withCall(() => api.setBrightness(v));
 const onContrast = (v: number) => withCall(() => api.setContrast(v));
 const onMute = (m: boolean) => withCall(() => api.setMute(m));
@@ -114,9 +119,7 @@ onUnmounted(() => {
 
 <template>
   <div class="min-h-full text-white">
-    <header
-      class="sticky top-0 z-20 backdrop-blur bg-black/30 border-b border-white/5"
-    >
+    <header class="sticky top-0 z-20 backdrop-blur bg-black/30 border-b border-white/5">
       <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
         <CltLogo :size="36" class="shrink-0" />
         <div class="flex-1 min-w-0">
@@ -155,7 +158,9 @@ onUnmounted(() => {
           class="px-2.5 py-1.5 rounded-fluent text-sm bg-white/5 hover:bg-white/10 border border-white/10"
           @click="toggleTheme"
           :title="theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-          :aria-label="theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+          :aria-label="
+            theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+          "
         >
           <Sun v-if="theme === 'dark'" class="w-4 h-4" />
           <Moon v-else class="w-4 h-4" />
@@ -189,7 +194,7 @@ onUnmounted(() => {
             <DashboardCard title="Power" subtitle="Turn the display on or off.">
               <PowerToggle
                 :model-value="status?.power ?? false"
-                :disabled="!status?.connected"
+                :disabled="false"
                 description="Sends command 0x40 to the display."
                 @change="onPower"
               />
@@ -206,14 +211,16 @@ onUnmounted(() => {
             <DashboardCard title="Volume" subtitle="0–100, with mute toggle.">
               <div class="space-y-4">
                 <FluentSlider
-                  :model-value="status?.volume ?? 0"
-                  :icon="status?.muted ? VolumeX : Volume2"
+                  :model-value="status?.muted ? 0 : status?.volume ?? 0"
+                  :icon="status?.muted || (status?.volume ?? 0) === 0 ? VolumeX : Volume2"
                   label="Volume"
                   unit="%"
-                  :disabled="!status?.connected || (status?.muted ?? false)"
+                  :disabled="!status?.connected"
                   @change="onVolume"
                 />
-                <div class="flex items-center justify-between text-sm pt-2 border-t border-white/5">
+                <div
+                  class="flex items-center justify-between text-sm pt-2 border-t border-white/5"
+                >
                   <span class="text-white/70">Mute</span>
                   <PowerToggle
                     :model-value="status?.muted ?? false"
@@ -262,14 +269,15 @@ onUnmounted(() => {
               <Smartphone class="w-5 h-5 mt-0.5 text-accent" />
               <div class="flex-1">
                 <p class="text-white/70 mb-2">
-                  Point any browser on the same Wi-Fi network at one of the
-                  addresses below:
+                  Point any browser on the same Wi-Fi network at one of the addresses
+                  below:
                 </p>
                 <ul class="space-y-1">
                   <li v-for="addr in info.addresses" :key="addr">
                     <code
                       class="text-accent bg-white/5 border border-white/10 rounded px-2 py-1 inline-block"
-                    >http://{{ addr }}:{{ info.port }}</code>
+                      >http://{{ addr }}:{{ info.port }}</code
+                    >
                   </li>
                 </ul>
               </div>
@@ -279,10 +287,7 @@ onUnmounted(() => {
 
         <!-- Right column: Communication Log -->
         <div class="lg:col-span-1">
-          <DashboardCard
-            title="Communication Log"
-            subtitle="RS-232 TX / RX traffic"
-          >
+          <DashboardCard title="Communication Log" subtitle="RS-232 TX / RX traffic">
             <CommunicationLog :logs="logs" @clear="onClearLogs" />
           </DashboardCard>
         </div>

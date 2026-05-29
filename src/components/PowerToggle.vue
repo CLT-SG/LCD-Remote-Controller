@@ -21,6 +21,7 @@ const checked = computed({
 
 function toggle() {
   if (props.disabled) return;
+
   const next = !checked.value;
   checked.value = next;
   emit("change", next);
