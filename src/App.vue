@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Top-level dashboard view. Polls device status periodically and dispatches
-// user actions to the embedded REST API.
-import { onMounted, onUnmounted, ref } from "vue";
+// Top-level dashboard view. Status is refreshed manually via the Refresh button
+// to avoid conflicts with user commands (brightness, power, etc.).
+import { onMounted, ref } from "vue";
 import {
   Volume2,
   VolumeX,
@@ -37,7 +37,6 @@ const logs = ref<SerialLogEntry[]>([]);
 const errorMessage = ref<string | null>(null);
 const showSettings = ref(false);
 const { theme, toggle: toggleTheme } = useTheme();
-let pollHandle: number | undefined;
 
 async function loadStatus() {
   try {
@@ -105,10 +104,6 @@ const onInput = (s: InputSource) => withCall(() => api.setInput(s));
 
 onMounted(async () => {
   await Promise.all([loadStatus(), loadCom(), loadInfo(), loadLogs()]);
-  pollHandle = window.setInterval(refreshAll, 5000);
-});
-onUnmounted(() => {
-  if (pollHandle) clearInterval(pollHandle);
 });
 </script>
 
@@ -144,7 +139,7 @@ onUnmounted(() => {
         <button
           type="button"
           class="px-2.5 py-1.5 rounded-fluent text-sm bg-white/5 hover:bg-white/10 border border-white/10"
-          @click="loadStatus"
+          @click="refreshAll"
           title="Refresh status"
           aria-label="Refresh status"
         >
