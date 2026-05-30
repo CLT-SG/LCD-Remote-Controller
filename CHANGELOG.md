@@ -4,6 +4,29 @@ All notable changes to this project are documented in this file. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.0.8 (30 May 2026)
+
+### Changed
+
+- **Removed auto-polling** — status is now refreshed manually via the Refresh
+  button (↻) instead of automatically every 5 seconds. This prevents command
+  conflicts when setting brightness, power, volume, or other controls. The
+  `setInterval` polling loop and associated cleanup have been removed from
+  `App.vue`.
+- Refresh button now calls `refreshAll()` to update both status and logs
+  instead of just `loadStatus()`.
+
+### Added
+
+- `docs/STATUS_REFRESH.md` — new documentation explaining the manual refresh
+  behavior, why auto-polling was removed, and best practices for keeping the
+  UI in sync with the display.
+
+### Fixed
+
+- **Commands skipping/failing** when auto-poll and user commands collided on
+  the serial port. Manual refresh eliminates this race condition entirely.
+
 ## v1.0.7 (21 May 2026)
 
 ### Added

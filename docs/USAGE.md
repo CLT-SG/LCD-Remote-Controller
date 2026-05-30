@@ -38,7 +38,7 @@ If the display does not reply reliably (all RX entries show *No response (timeou
   needs more time to initialise the RS-232 link.
 * **Inter-Command Delay (ms)** — minimum gap between consecutive commands.
   Default is `100 ms`. Increase to `200–300 ms` if the display is overwhelmed
-  by back-to-back traffic during status polling.
+  by rapid consecutive commands.
 
 ## 4. Control the display
 
@@ -50,6 +50,11 @@ If the display does not reply reliably (all RX entries show *No response (timeou
 
 A connection indicator in the header turns red whenever a command fails
 or the port is closed; the message bar below shows the underlying error.
+
+Click the **Refresh** button (↻) in the header to manually sync the UI with
+the display's current state. This is useful after physical adjustments or
+when using multiple controllers. See [Status Refresh](STATUS_REFRESH.md) for
+details.
 
 ## 5. Use a phone
 
