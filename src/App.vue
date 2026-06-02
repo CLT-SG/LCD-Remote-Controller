@@ -38,7 +38,6 @@ const errorMessage = ref<string | null>(null);
 const showSettings = ref(false);
 const { theme, toggle: toggleTheme } = useTheme();
 let pollHandle: number | undefined;
-const isUserOperating = ref(false);
 
 async function loadStatus() {
   try {
@@ -74,29 +73,17 @@ async function loadInfo() {
 }
 
 async function refreshAll() {
-  if (isUserOperating.value) return;
-
   await Promise.all([loadStatus(), loadCom(), loadInfo(), loadLogs()]);
 }
 
 async function withCall(fn: () => Promise<DeviceStatus>) {
-  isUserOperating.value = true;
-
   try {
     const r = await fn();
-
     status.value = r;
     errorMessage.value = r.last_error ?? null;
-
     await loadLogs();
-
-    // 给LCD反应时间
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
   } catch (e) {
     errorMessage.value = (e as Error).message;
-  } finally {
-    isUserOperating.value = false;
   }
 }
 
@@ -123,7 +110,7 @@ const onInput = (s: InputSource) => withCall(() => api.setInput(s));
 
 onMounted(async () => {
   await Promise.all([loadStatus(), loadCom(), loadInfo(), loadLogs()]);
-  pollHandle = window.setInterval(refreshAll, 2000);
+  pollHandle = window.setInterval(refreshAll, 5000);
 });
 onUnmounted(() => {
   if (pollHandle) clearInterval(pollHandle);
