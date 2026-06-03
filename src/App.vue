@@ -36,6 +36,7 @@ const info = ref<ServerInfo | null>(null);
 const logs = ref<SerialLogEntry[]>([]);
 const errorMessage = ref<string | null>(null);
 const showSettings = ref(false);
+const busy = ref(false);
 const { theme, toggle: toggleTheme } = useTheme();
 let pollHandle: number | undefined;
 
@@ -76,14 +77,27 @@ async function refreshAll() {
   await Promise.all([loadStatus(), loadCom(), loadInfo(), loadLogs()]);
 }
 
+function delay(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 async function withCall(fn: () => Promise<DeviceStatus>) {
+  if (busy.value) return;
+
+  busy.value = true;
+
   try {
     const r = await fn();
     status.value = r;
     errorMessage.value = r.last_error ?? null;
+
+    await loadLogs();
+    await delay(800);
     await loadLogs();
   } catch (e) {
     errorMessage.value = (e as Error).message;
+  } finally {
+    busy.value = false;
   }
 }
 
@@ -194,7 +208,7 @@ onUnmounted(() => {
             <DashboardCard title="Power" subtitle="Turn the display on or off.">
               <PowerToggle
                 :model-value="status?.power ?? false"
-                :disabled="false"
+                :disabled="busy"
                 description="Sends command 0x40 to the display."
                 @change="onPower"
               />
@@ -203,7 +217,7 @@ onUnmounted(() => {
             <DashboardCard title="Input Source" subtitle="Switch the active video input.">
               <InputSourceSelect
                 :model-value="status?.input ?? null"
-                :disabled="!status?.connected"
+                :disabled="busy || !status?.connected"
                 @change="onInput"
               />
             </DashboardCard>
@@ -215,7 +229,7 @@ onUnmounted(() => {
                   :icon="status?.muted || (status?.volume ?? 0) === 0 ? VolumeX : Volume2"
                   label="Volume"
                   unit="%"
-                  :disabled="!status?.connected"
+                  :disabled="busy || !status?.connected"
                   @change="onVolume"
                 />
                 <div
@@ -224,7 +238,7 @@ onUnmounted(() => {
                   <span class="text-white/70">Mute</span>
                   <PowerToggle
                     :model-value="status?.muted ?? false"
-                    :disabled="!status?.connected"
+                    :disabled="busy || !status?.connected"
                     label=""
                     @change="onMute"
                   />
@@ -241,7 +255,7 @@ onUnmounted(() => {
                 :icon="Sun"
                 label="Brightness"
                 unit="%"
-                :disabled="!status?.connected"
+                :disabled="busy || !status?.connected"
                 @change="onBrightness"
               />
             </DashboardCard>
@@ -252,7 +266,7 @@ onUnmounted(() => {
                 :icon="Contrast"
                 label="Contrast"
                 unit="%"
-                :disabled="!status?.connected"
+                :disabled="busy || !status?.connected"
                 @change="onContrast"
               />
             </DashboardCard>

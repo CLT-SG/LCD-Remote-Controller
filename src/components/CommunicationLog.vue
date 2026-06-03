@@ -1,14 +1,30 @@
 <script setup lang="ts">
+import { ref, watch, nextTick } from "vue";
 import { Trash2 } from "lucide-vue-next";
 import type { SerialLogEntry } from "../types";
 
-defineProps<{
+const props = defineProps<{
   logs: SerialLogEntry[];
 }>();
 
 const emit = defineEmits<{
   (e: "clear"): void;
 }>();
+
+const logContainer = ref<HTMLElement | null>(null);
+
+watch(
+  () => props.logs.length,
+  async () => {
+    await nextTick();
+
+    if (logContainer.value) {
+      logContainer.value.scrollTop =
+        logContainer.value.scrollHeight;
+    }
+  }
+);
+
 </script>
 
 <template>
@@ -28,36 +44,24 @@ const emit = defineEmits<{
           ERR
         </span>
       </div>
-      <button
-        type="button"
+      <button type="button"
         class="px-2.5 py-1.5 rounded-fluent text-xs bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 text-white/70 disabled:opacity-40"
-        :disabled="logs.length === 0"
-        @click="emit('clear')"
-      >
+        :disabled="logs.length === 0" @click="emit('clear')">
         <Trash2 class="w-3.5 h-3.5" />
         Clear
       </button>
     </div>
 
-    <div
-      class="h-64 overflow-y-auto rounded-fluent bg-black/20 border border-white/5 p-3 space-y-2 font-mono text-xs"
-    >
-      <div
-        v-for="(entry, index) in logs"
-        :key="index"
-        class="flex gap-2 items-start"
-      >
+    <div ref="logContainer"
+      class="h-64 overflow-y-auto rounded-fluent bg-black/20 border border-white/5 p-3 space-y-2 font-mono text-xs">
+      <div v-for="(entry, index) in logs" :key="index" class="flex gap-2 items-start">
         <span class="text-white/40 shrink-0 w-16">{{ entry.timestamp }}</span>
-        <span
-          class="shrink-0 w-8 text-center font-bold rounded px-1"
-          :class="
-            entry.direction === 'TX'
-              ? 'bg-sky-500/20 text-sky-300'
-              : entry.direction === 'ERR'
-                ? 'bg-red-500/20 text-red-300'
-                : 'bg-emerald-500/20 text-emerald-300'
-          "
-        >
+        <span class="shrink-0 w-8 text-center font-bold rounded px-1" :class="entry.direction === 'TX'
+            ? 'bg-sky-500/20 text-sky-300'
+            : entry.direction === 'ERR'
+              ? 'bg-red-500/20 text-red-300'
+              : 'bg-emerald-500/20 text-emerald-300'
+          ">
           {{ entry.direction }}
         </span>
         <div class="flex-1 min-w-0 space-y-0.5">

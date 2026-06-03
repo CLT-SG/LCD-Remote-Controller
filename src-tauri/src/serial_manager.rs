@@ -73,16 +73,19 @@ impl SerialLog {
 
 fn format_timestamp() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
+
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default();
-    let secs = now.as_secs();
+
+    let secs = now.as_secs() + 8 * 3600;
+
     let hh = (secs / 3600) % 24;
     let mm = (secs / 60) % 60;
     let ss = secs % 60;
+
     format!("{:02}:{:02}:{:02}", hh, mm, ss)
 }
-
 pub struct SerialManager {
     config: ComConfig,
     port: Option<Box<dyn SerialPort>>,

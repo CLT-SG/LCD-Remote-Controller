@@ -74,6 +74,11 @@ async fn refresh_and_return(state: AppState) -> Json<DeviceSnapshot> {
     Json(inner.snapshot.clone())
 }
 
+async fn snapshot_only(state: AppState) -> Json<DeviceSnapshot> {
+    let inner = state.lock().await;
+    Json(inner.snapshot.clone())
+}
+
 // ---------------- Handlers ----------------
 
 async fn health() -> &'static str {
@@ -137,8 +142,9 @@ async fn set_power(State(state): State<AppState>, Json(req): Json<PowerReq>) -> 
     if let Err(e) = inner.serial.set_power(req.on) {
         return err(StatusCode::BAD_GATEWAY, format!("{e:#}"));
     }
+    inner.snapshot.power = Some(req.on);
     drop(inner);
-    refresh_and_return(state).await.into_response()
+    snapshot_only(state).await.into_response()
 }
 
 #[derive(Deserialize)]
@@ -147,13 +153,45 @@ struct PercentReq {
 }
 
 async fn set_volume(State(state): State<AppState>, Json(req): Json<PercentReq>) -> Response {
-    set_percent(state, req.value, |s, v| s.set_volume(v)).await
+
+    let mut inner = state.lock().await;
+    if let Err(e) = inner.serial.set_volume(req.value) {
+        return err(StatusCode::BAD_GATEWAY, format!("{e:#}"));
+    }
+
+    inner.snapshot.volume = Some(req.value);
+    drop(inner);
+    snapshot_only(state).await.into_response()
 }
+
 async fn set_brightness(State(state): State<AppState>, Json(req): Json<PercentReq>) -> Response {
-    set_percent(state, req.value, |s, v| s.set_brightness(v)).await
+    if req.value > 100 {
+        return err(StatusCode::BAD_REQUEST, "value must be 0..=100");
+    }
+
+    let mut inner = state.lock().await;
+    if let Err(e) = inner.serial.set_brightness(req.value) {
+        return err(StatusCode::BAD_GATEWAY, format!("{e:#}"));
+    }
+
+    inner.snapshot.brightness = Some(req.value);
+    drop(inner);
+    snapshot_only(state).await.into_response()
 }
+
 async fn set_contrast(State(state): State<AppState>, Json(req): Json<PercentReq>) -> Response {
-    set_percent(state, req.value, |s, v| s.set_contrast(v)).await
+    if req.value > 100 {
+        return err(StatusCode::BAD_REQUEST, "value must be 0..=100");
+    }
+
+    let mut inner = state.lock().await;
+    if let Err(e) = inner.serial.set_contrast(req.value) {
+        return err(StatusCode::BAD_GATEWAY, format!("{e:#}"));
+    }
+
+    inner.snapshot.contrast = Some(req.value);
+    drop(inner);
+    snapshot_only(state).await.into_response()
 }
 
 async fn set_percent<F>(state: AppState, value: u8, f: F) -> Response
@@ -168,7 +206,7 @@ where
         return err(StatusCode::BAD_GATEWAY, format!("{e:#}"));
     }
     drop(inner);
-    refresh_and_return(state).await.into_response()
+    snapshot_only(state).await.into_response()
 }
 
 #[derive(Deserialize)]
@@ -178,11 +216,15 @@ struct MuteReq {
 
 async fn set_mute(State(state): State<AppState>, Json(req): Json<MuteReq>) -> Response {
     let mut inner = state.lock().await;
+
     if let Err(e) = inner.serial.set_mute(req.muted) {
         return err(StatusCode::BAD_GATEWAY, format!("{e:#}"));
     }
+
+    inner.snapshot.muted = Some(req.muted);
+
     drop(inner);
-    refresh_and_return(state).await.into_response()
+    snapshot_only(state).await.into_response()
 }
 
 #[derive(Deserialize)]
@@ -192,11 +234,15 @@ struct InputReq {
 
 async fn set_input(State(state): State<AppState>, Json(req): Json<InputReq>) -> Response {
     let mut inner = state.lock().await;
+
     if let Err(e) = inner.serial.set_input(req.source) {
         return err(StatusCode::BAD_GATEWAY, format!("{e:#}"));
     }
+
+    inner.snapshot.input = Some(req.source);
+
     drop(inner);
-    refresh_and_return(state).await.into_response()
+    snapshot_only(state).await.into_response()
 }
 
 #[derive(Serialize)]

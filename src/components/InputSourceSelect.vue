@@ -5,8 +5,6 @@ const sources: { id: InputSource; label: string }[] = [
   { id: "vga", label: "VGA" },
   { id: "hdmi", label: "HDMI" },
   { id: "dp", label: "DP" },
-  { id: "dvi", label: "DVI" },
-  { id: "av", label: "AV" },
 ];
 
 const props = defineProps<{ modelValue: InputSource | null; disabled?: boolean }>();

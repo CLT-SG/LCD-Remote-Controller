@@ -34,13 +34,28 @@ async function request<T>(
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!res.ok) {
-    const msg = (data && (data.error as string)) || res.statusText;
-    throw new Error(msg);
-  }
-  return data as T;
+const text = await res.text();
+
+let data: unknown = null;
+
+try {
+  data = text ? JSON.parse(text) : null;
+} catch {
+  data = text;
+}
+
+if (!res.ok) {
+  const msg =
+    typeof data === "object" &&
+    data !== null &&
+    "error" in data
+      ? String((data as { error?: unknown }).error)
+      : res.statusText;
+
+  throw new Error(msg);
+}
+
+return data as T;
 }
 
 export const api = {
