@@ -73,27 +73,43 @@ impl SerialLog {
 
 fn format_timestamp() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
+
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default();
-    let secs = now.as_secs();
+
+    let secs = now.as_secs() + 8 * 3600;
+
     let hh = (secs / 3600) % 24;
     let mm = (secs / 60) % 60;
     let ss = secs % 60;
+
     format!("{:02}:{:02}:{:02}", hh, mm, ss)
 }
-
 pub struct SerialManager {
     config: ComConfig,
     port: Option<Box<dyn SerialPort>>,
     log: SerialLog,
     last_tx: Option<Instant>,
     last_port_open: Option<Instant>,
+
+    mock_power: bool,
+    mock_volume: u8,
+    mock_brightness: u8,
+    mock_contrast: u8,
+    mock_mute: bool,
+    mock_input: InputSource,
 }
 
 impl SerialManager {
     pub fn new(config: ComConfig) -> Self {
         Self {
+            mock_power: false,
+            mock_volume: 50,
+            mock_brightness: 50,
+            mock_contrast: 50,
+            mock_mute: false,
+            mock_input: InputSource::Hdmi,
             config,
             port: None,
             log: SerialLog::new(200),
@@ -122,9 +138,13 @@ impl SerialManager {
     }
 
     pub fn list_ports() -> Vec<String> {
-        serialport::available_ports()
+        let mut ports: Vec<String> = serialport::available_ports()
             .map(|ports| ports.into_iter().map(|p| p.port_name).collect())
-            .unwrap_or_default()
+            .unwrap_or_default();
+
+        ports.push("MOCK".to_string());
+
+        ports
     }
 
     /// Open the configured port, returning an error if it cannot be opened.
@@ -143,6 +163,11 @@ impl SerialManager {
             7 => serialport::DataBits::Seven,
             _ => serialport::DataBits::Eight,
         };
+
+        if self.config.port == "MOCK" {
+            self.last_port_open = Some(Instant::now());
+            return Ok(());
+        }
         let port = serialport::new(&self.config.port, self.config.baud_rate)
             .data_bits(data_bits)
             .stop_bits(stop_bits)
@@ -163,7 +188,7 @@ impl SerialManager {
     }
 
     pub fn is_connected(&self) -> bool {
-        self.port.is_some()
+        self.config.port == "MOCK" || self.port.is_some()
     }
 
     pub fn logs(&self) -> Vec<SerialLogEntry> {
@@ -199,14 +224,22 @@ impl SerialManager {
             }
         }
 
+        self.log.push("TX", frame, op_name);
+
+        if self.config.port == "MOCK" {
+            std::thread::sleep(Duration::from_millis(50));
+            self.last_tx = Some(Instant::now());
+            self.log.push("RX", &[0x00], "MOCK response");
+            return Ok(vec![0x00]);
+        }
+
         let port = self
             .port
             .as_mut()
             .expect("port should be open after open()");
+
         // Best-effort flush of stale bytes from the receive buffer.
         let _ = port.clear(serialport::ClearBuffer::Input);
-
-        self.log.push("TX", frame, op_name);
 
         port.write_all(frame).context("writing serial frame")?;
         port.flush().context("flushing serial frame")?;
@@ -242,26 +275,54 @@ impl SerialManager {
     // ---- Getters --------------------------------------------------------
 
     pub fn get_power(&mut self) -> Result<Option<bool>> {
+        if self.config.port == "MOCK" {
+            return Ok(Some(self.mock_power));
+        }
+
         let r = self.transact(&cmd::get(Op::GetPower), 1, "Get Power")?;
         Ok(r.first().and_then(|b| protocol::parse_bool(*b)))
     }
     pub fn get_brightness(&mut self) -> Result<Option<u8>> {
+        if self.config.port == "MOCK" {
+            return Ok(Some(self.mock_brightness));
+        }
+
         let r = self.transact(&cmd::get(Op::GetBrightness), 1, "Get Brightness")?;
         Ok(r.first().and_then(|b| protocol::parse_percent(*b)))
     }
+
     pub fn get_contrast(&mut self) -> Result<Option<u8>> {
+        if self.config.port == "MOCK" {
+            return Ok(Some(self.mock_contrast));
+        }
+
         let r = self.transact(&cmd::get(Op::GetContrast), 1, "Get Contrast")?;
         Ok(r.first().and_then(|b| protocol::parse_percent(*b)))
     }
+
     pub fn get_volume(&mut self) -> Result<Option<u8>> {
+        if self.config.port == "MOCK" {
+            return Ok(Some(self.mock_volume));
+        }
+
         let r = self.transact(&cmd::get(Op::GetVolume), 1, "Get Volume")?;
         Ok(r.first().and_then(|b| protocol::parse_percent(*b)))
     }
+
     pub fn get_mute(&mut self) -> Result<Option<bool>> {
+        if self.config.port == "MOCK" {
+            return Ok(Some(self.mock_mute));
+        }
+
         let r = self.transact(&cmd::get(Op::GetMute), 1, "Get Mute")?;
         Ok(r.first().and_then(|b| protocol::parse_bool(*b)))
     }
+
     pub fn get_input(&mut self) -> Result<Option<InputSource>> {
+        if self.config.port == "MOCK" {
+            return Ok(Some(self.mock_input));
+        }
+
         let r = self.transact(&cmd::get(Op::GetInput), 1, "Get Input")?;
         Ok(r.first().and_then(|b| InputSource::from_byte(*b)))
     }
@@ -269,14 +330,25 @@ impl SerialManager {
     // ---- Setters --------------------------------------------------------
 
     pub fn set_power(&mut self, on: bool) -> Result<()> {
+        if self.config.port == "MOCK" {
+            self.mock_power = on;
+            return Ok(());
+        }
+
         self.transact(
             &cmd::set_bool(Op::SetPower, on),
             1,
             &format!("Set Power = {}", if on { "On" } else { "Off" }),
         )?;
+
         Ok(())
     }
     pub fn set_brightness(&mut self, value: u8) -> Result<()> {
+        if self.config.port == "MOCK" {
+            self.mock_brightness = value.min(100);
+            return Ok(());
+        }
+
         self.transact(
             &cmd::set_percent(Op::SetBrightness, value.min(100)),
             1,
@@ -284,7 +356,13 @@ impl SerialManager {
         )?;
         Ok(())
     }
+
     pub fn set_contrast(&mut self, value: u8) -> Result<()> {
+        if self.config.port == "MOCK" {
+            self.mock_contrast = value.min(100);
+            return Ok(());
+        }
+
         self.transact(
             &cmd::set_percent(Op::SetContrast, value.min(100)),
             1,
@@ -292,7 +370,13 @@ impl SerialManager {
         )?;
         Ok(())
     }
+
     pub fn set_volume(&mut self, value: u8) -> Result<()> {
+        if self.config.port == "MOCK" {
+            self.mock_volume = value.min(100);
+            return Ok(());
+        }
+
         self.transact(
             &cmd::set_percent(Op::SetVolume, value.min(100)),
             1,
@@ -300,7 +384,13 @@ impl SerialManager {
         )?;
         Ok(())
     }
+
     pub fn set_mute(&mut self, muted: bool) -> Result<()> {
+        if self.config.port == "MOCK" {
+            self.mock_mute = muted;
+            return Ok(());
+        }
+
         self.transact(
             &cmd::set_bool(Op::SetMute, muted),
             1,
@@ -308,7 +398,13 @@ impl SerialManager {
         )?;
         Ok(())
     }
+
     pub fn set_input(&mut self, source: InputSource) -> Result<()> {
+        if self.config.port == "MOCK" {
+            self.mock_input = source;
+            return Ok(());
+        }
+
         self.transact(
             &cmd::set_input(source),
             1,

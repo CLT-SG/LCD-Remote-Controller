@@ -2,7 +2,7 @@
 // Windows 11 Fluent-style slider with a tooltip flyout that appears while
 // dragging. Emits `change` only when the user releases the pointer to avoid
 // flooding the device with serial commands while sliding.
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 const props = defineProps<{
   modelValue: number;
@@ -25,10 +25,16 @@ const max = computed(() => props.max ?? 100);
 const step = computed(() => props.step ?? 1);
 
 const dragging = ref(false);
-const local = computed({
-  get: () => props.modelValue,
-  set: (v: number) => emit("update:modelValue", v),
-});
+const local = ref(props.modelValue);
+
+watch(
+  () => props.modelValue,
+  (v) => {
+    if (!dragging.value) {
+      local.value = v;
+    }
+  },
+);
 
 const percent = computed(() => {
   const range = max.value - min.value;
@@ -41,8 +47,11 @@ function onInput(e: Event) {
   local.value = v;
 }
 function onChange() {
-  dragging.value = false;
   emit("change", local.value);
+
+  window.setTimeout(() => {
+    dragging.value = false;
+  }, 2000);
 }
 </script>
 
