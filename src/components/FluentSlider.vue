@@ -30,7 +30,9 @@ const local = ref(props.modelValue);
 watch(
   () => props.modelValue,
   (v) => {
-    local.value = v;
+    if (!dragging.value) {
+      local.value = v;
+    }
   },
 );
 
@@ -45,8 +47,11 @@ function onInput(e: Event) {
   local.value = v;
 }
 function onChange() {
-  dragging.value = false;
   emit("change", local.value);
+
+  window.setTimeout(() => {
+    dragging.value = false;
+  }, 2000);
 }
 </script>
 

@@ -62,12 +62,28 @@ impl Inner {
     }
 
     fn poll(&mut self) -> anyhow::Result<()> {
-        self.snapshot.power = self.serial.get_power()?;
-        self.snapshot.brightness = self.serial.get_brightness()?;
-        self.snapshot.contrast = self.serial.get_contrast()?;
-        self.snapshot.volume = self.serial.get_volume()?;
-        self.snapshot.muted = self.serial.get_mute()?;
-        self.snapshot.input = self.serial.get_input()?;
+        if let Some(v) = self.serial.get_power()? {
+            self.snapshot.power = Some(v);
+        }
+        if let Some(v) = self.serial.get_brightness()? {
+            if v <= 100 {
+                self.snapshot.brightness = Some(v);
+            }
+        }
+        if let Some(v) = self.serial.get_contrast()? {
+            self.snapshot.contrast = Some(v);
+        }
+        if let Some(v) = self.serial.get_volume()? {
+            self.snapshot.volume = Some(v);
+        }
+        if let Some(v) = self.serial.get_mute()? {
+            self.snapshot.muted = Some(v);
+        }
+        if let Some(v) = self.serial.get_input()? {
+            if matches!(v, InputSource::Vga | InputSource::Hdmi | InputSource::Dp) {
+                self.snapshot.input = Some(v);
+            }
+        }
         Ok(())
     }
 
